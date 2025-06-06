@@ -1,28 +1,54 @@
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
 
-public class EnemyMovement : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
-    public float enemySpeed;
+    //ENCAPSULATION
+    private float enemySpeed { get; set; }
+    
+    private GameObject player { get; set; }
 
-    public GameObject player;
-
-    public float xBound = 18.5f;
-    public float zBound = 8.5f;
-
-
-    [SerializeField] private Vector3 moveDirection;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public GameObject GetPlayer()
     {
-
+        player = GameObject.Find("Player");
+        return player;
     }
+
+    public float SetSpeed(float speed)
+    {
+        enemySpeed = speed;
+        return enemySpeed;
+    }
+
+    private float xBound = 18.5f;
+    private float zBound = 8.5f;
+
+    private Vector3 moveDirection;
+
+    public GameObject projectile;
+    public float shootTime;
+
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
 
     // Update is called once per frame
     void Update()
+    {
+        MoveTowardsPlayer();
+        CheckBounds();
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 playCenter = new Vector3(0f, 0f, 0f);
+        Vector3 cubeGizmoSize = new Vector3(xBound * 2, 0f, zBound * 2);
+
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireCube(playCenter, cubeGizmoSize);
+
+        Gizmos.DrawRay(transform.position, moveDirection);
+
+    }
+
+    public void MoveTowardsPlayer()
     {
         moveDirection = player.transform.position - transform.position;
 
@@ -35,8 +61,13 @@ public class EnemyMovement : MonoBehaviour
         {
             transform.Translate(moveDirection.normalized * Time.deltaTime * enemySpeed);
             gameObject.GetComponent<Renderer>().material.color = Color.red;
-        }
 
+            transform.rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+        }
+    }
+
+    public void CheckBounds()
+    {
         if (transform.position.z > zBound)
         {
             transform.position = new Vector3(transform.position.x, transform.position.y, zBound);
@@ -56,15 +87,13 @@ public class EnemyMovement : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmosSelected()
+    //POLYMOPHISM
+    public virtual void Shoot()
     {
-        Vector3 playCenter = new Vector3(0f, 0f, 0f);
-        Vector3 cubeGizmoSize = new Vector3(xBound * 2, 0f, zBound * 2);
-
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(playCenter, cubeGizmoSize);
-
-        Gizmos.DrawRay(transform.position, moveDirection);
-
+        Instantiate(projectile, transform.position, transform.rotation);
     }
+
+
+
+
 }
